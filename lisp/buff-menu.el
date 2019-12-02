@@ -702,4 +702,6 @@ means list those buffers and no others."
 	((bound-and-true-p list-buffers-directory))
 	(t "")))
 
+(provide 'buff-menu)
+
 ;;; buff-menu.el ends here

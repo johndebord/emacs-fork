@@ -8725,9 +8725,15 @@ See also `normal-erase-is-backspace'."
     (cond ((or (memq window-system '(x w32 ns pc))
 	       (memq system-type '(ms-dos windows-nt)))
 	   (let ((bindings
-		  `(([M-delete] [M-backspace])
-		    ([C-M-delete] [C-M-backspace])
-		    ([?\e C-delete] [?\e C-backspace]))))
+                  ;;; John DeBord
+                  ;;; Dec. 1st, 2019
+                  ;;; Commenting out due to recieving the error:
+                  ;;; `error: Key sequence ESC <C-delete> starts with
+                  ;;; non-prefix key ESC`
+		  ;; `(([M-delete] [M-backspace])
+		  ;;   ([C-M-delete] [C-M-backspace])
+		  ;;   ([?\e C-delete] [?\e C-backspace]))
+                  ))
 
 	     (if enabled
 		 (progn
