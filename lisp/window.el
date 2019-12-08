@@ -10010,4 +10010,6 @@ displaying that processes's buffer."
 (define-key ctl-x-map "+" 'balance-windows)
 (define-key ctl-x-4-map "0" 'kill-buffer-and-window)
 
+(provide 'window)
+
 ;;; window.el ends here
