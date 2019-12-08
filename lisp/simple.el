@@ -8850,7 +8850,8 @@ See also `normal-erase-is-backspace'."
                   ;;; non-prefix key ESC`
 		  ;; '(([M-delete] [M-backspace])
 		  ;;   ([C-M-delete] [C-M-backspace])
-		  ;;   ([?\e C-delete] [?\e C-backspace]))))
+		  ;;   ([?\e C-delete] [?\e C-backspace]))
+		  ))
 
 	     (if enabled
 		 (progn
