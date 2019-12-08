@@ -1399,4 +1399,6 @@ if `inhibit-field-text-motion' is non-nil."
 ;; no-update-autoloads: t
 ;; End:
 
+(provide 'bindings)
+
 ;;; bindings.el ends here
