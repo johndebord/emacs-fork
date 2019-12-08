@@ -712,4 +712,6 @@ means list those buffers and no others."
          (abbreviate-file-name list-buffers-directory))
 	(t "")))
 
+(provide 'buff-menu)
+
 ;;; buff-menu.el ends here
