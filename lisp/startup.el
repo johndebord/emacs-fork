@@ -2697,4 +2697,6 @@ nil default-directory" name)
 	(setq file (replace-match "/" t t file))))
     file))
 
+(provide 'startup)
+
 ;;; startup.el ends here
