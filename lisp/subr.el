@@ -5755,4 +5755,6 @@ returned list are in the same order as in TREE.
 (defconst regexp-unmatchable "\\`a\\`"
   "Standard regexp guaranteed not to match any string at all.")
 
+(provide 'subr)
+
 ;;; subr.el ends here
