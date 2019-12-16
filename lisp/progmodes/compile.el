@@ -1529,48 +1529,32 @@ to `compilation-error-regexp-alist' if RULES is nil."
                         'compile-history)))
 
 
-;;;###autoload
-(defun compile (command &optional comint)
-  "Compile the program including the current buffer.  Default: run `make'.
-Runs COMMAND, a shell command, in a separate process asynchronously
-with output going to the buffer `*compilation*'.
-
-You can then use the command \\[next-error] to find the next error message
-and move to the source code that caused it.
-
-If optional second arg COMINT is t the buffer will be in Comint mode with
-`compilation-shell-minor-mode'.
-
-Interactively, prompts for the command if the variable
-`compilation-read-command' is non-nil; otherwise uses `compile-command'.
-With prefix arg, always prompts.
-Additionally, with universal prefix arg, compilation buffer will be in
-comint mode, i.e. interactive.
-
-To run more than one compilation at once, start one then rename
-the `*compilation*' buffer to some other name with
-\\[rename-buffer].  Then _switch buffers_ and start the new compilation.
-It will create a new `*compilation*' buffer.
-
-On most systems, termination of the main compilation process
-kills its subprocesses.
-
-The name used for the buffer is actually whatever is returned by
-the function in `compilation-buffer-name-function', so you can set that
-to a function that generates a unique name."
+;;; John DeBord
+;;; Dec. 15th, 2019
+;;; Rework of this function to support proper window switching in
+;;; certain contexts.
+(defun compile (command_ &optional comint_)
   (interactive
    (list
-    (let ((command (eval compile-command)))
+    (let ((command_ (eval compile-command)))
       (if (or compilation-read-command current-prefix-arg)
-	  (compilation-read-command command)
-	command))
+	  (compilation-read-command command_)
+	command_))
     (consp current-prefix-arg)))
-  (unless (equal command (eval compile-command))
-    (setq compile-command command))
+
+  (unless (equal command_ (eval compile-command))
+    (setq compile-command command_))
+
   (save-some-buffers (not compilation-ask-about-save)
                      compilation-save-buffers-predicate)
+
   (setq-default compilation-directory default-directory)
-  (compilation-start command comint))
+  (let ((compilation-window_ (get-buffer-window "*compilation*")))
+    (if (equal compilation-window_ nil)
+        (compilation-start command comint_)
+      (save-window-excursion
+        (select-window compilation-window_)
+        (compilation-start command comint_)))))
 
 ;; run compile with the default command line
 (defun recompile (&optional edit-command)
@@ -2474,85 +2458,91 @@ as a last resort."
       (current-buffer)
     (next-error-find-buffer avoid-current 'compilation-buffer-internal-p)))
 
-;;;###autoload
-(defun compilation-next-error-function (n &optional reset)
-  "Advance to the next error message and visit the file where the error was.
-This is the value of `next-error-function' in Compilation buffers."
+;;; John DeBord
+;;; Dec. 15th, 2019
+;;; Rework of this function to support proper window switching in
+;;; certain contexts.
+(defun compilation-next-error-function (n_ &optional reset_)
   (interactive "p")
-  (when reset
+  (when reset_
     (setq compilation-current-error nil))
-  (let* ((screen-columns compilation-error-screen-columns)
-	 (first-column compilation-first-column)
-	 (last 1)
-	 (msg (compilation-next-error (or n 1) nil
+
+  (let* ((screen-columns_ compilation-error-screen-columns)
+	 (first-column_ compilation-first-column)
+	 (last_ 1)
+	 (msg_ (compilation-next-error (or n_ 1) nil
 				      (or compilation-current-error
 					  compilation-messages-start
 					  (point-min))))
-	 (loc (compilation--message->loc msg))
-	 (end-loc (compilation--message->end-loc msg))
-	 (marker (point-marker)))
+	 (loc_ (compilation--message->loc msg_))
+	 (end-loc_ (compilation--message->end-loc msg_))
+	 (marker_ (point-marker)))
+
     (setq compilation-current-error (point-marker)
 	  overlay-arrow-position
-	    (if (bolp)
-		compilation-current-error
-	      (copy-marker (line-beginning-position))))
-    ;; If loc contains no marker, no error in that file has been visited.
-    ;; If the marker is invalid the buffer has been killed.
-    ;; So, recalculate all markers for that file.
-    (unless (and (compilation--loc->marker loc)
-                 (marker-buffer (compilation--loc->marker loc))
-                 ;; FIXME-omake: For "omake -P", which automatically recompiles
-                 ;; when the file is modified, the line numbers of new output
-                 ;; may not be related to line numbers from earlier output
-                 ;; (earlier markers), so we used to try to detect it here and
-                 ;; force a reparse.  But that caused more problems elsewhere,
-                 ;; so instead we now flush the file-structure when we see
-                 ;; omake's message telling it's about to recompile a file.
-                 ;; (or (null (compilation--loc->timestamp loc)) ;A fake-loc
-                 ;;     (equal (compilation--loc->timestamp loc)
-                 ;;            (setq timestamp compilation-buffer-modtime)))
-                 )
-      (with-current-buffer
-          (apply #'compilation-find-file
-                 marker
-                 (caar (compilation--loc->file-struct loc))
-                 (cadr (car (compilation--loc->file-struct loc)))
-                 (compilation--file-struct->formats
-                  (compilation--loc->file-struct loc)))
-        (let ((screen-columns
-               ;; Obey the compilation-error-screen-columns of the target
-               ;; buffer if its major mode set it buffer-locally.
-               (if (local-variable-p 'compilation-error-screen-columns)
-                   compilation-error-screen-columns screen-columns))
-              (compilation-first-column
-               (if (local-variable-p 'compilation-first-column)
-                   compilation-first-column first-column)))
-          (save-restriction
-            (widen)
-            (goto-char (point-min))
-            ;; Treat file's found lines in forward order, 1 by 1.
-            (dolist (line (reverse (cddr (compilation--loc->file-struct loc))))
-              (when (car line)		; else this is a filename w/o a line#
-                (compilation-beginning-of-line (- (car line) last -1))
-                (setq last (car line)))
-              ;; Treat line's found columns and store/update a marker for each.
-              (dolist (col (cdr line))
-                (if (compilation--loc->col col)
-                    (if (eq (compilation--loc->col col) -1)
-                        ;; Special case for range end.
-                        (end-of-line)
-                      (compilation-move-to-column (compilation--loc->col col)
-                                                  screen-columns))
-                  (beginning-of-line)
-                  (skip-chars-forward " \t"))
-                (if (compilation--loc->marker col)
-                    (set-marker (compilation--loc->marker col) (point))
-                  (setf (compilation--loc->marker col) (point-marker)))
-                ;; (setf (compilation--loc->timestamp col) timestamp)
-                ))))))
-    (compilation-goto-locus marker (compilation--loc->marker loc)
-                            (compilation--loc->marker end-loc))
-    (setf (compilation--loc->visited loc) t)))
+	  (if (bolp)
+	      compilation-current-error
+	    (copy-marker (line-beginning-position))))
+
+    (let ((compilation-window_
+           (get-buffer-window (marker-buffer marker_)))
+          (compilation-error-window_
+           (if (equal (get-file-buffer (caar (compilation--loc->file-struct loc_))) nil)
+               nil
+             (get-buffer-window (get-file-buffer (caar (compilation--loc->file-struct loc_)))))))
+
+      (if (not (equal compilation-window_ nil))
+          (progn
+            (select-window compilation-window_)
+            (goto-char (marker-position marker_))
+            (recenter)))
+
+      (if (not (equal compilation-error-window_ nil))
+          (select-window compilation-error-window_)
+        (find-file (caar (compilation--loc->file-struct loc_))))
+
+      (unless (and (compilation--loc->marker loc_)
+                   (marker-buffer (compilation--loc->marker loc_)))
+
+      (if (bufferp (caar (compilation--loc->file-struct loc_)))
+          (caar (compilation--loc->file-struct loc_))
+        (apply #'compilation-find-file
+               marker_
+               (caar (compilation--loc->file-struct loc_))
+               (cadr (car (compilation--loc->file-struct loc_)))
+               (compilation--file-struct->formats
+                (compilation--loc->file-struct loc_))))
+
+      (let ((screen-columns_
+             (if (local-variable-p 'compilation-error-screen-columns_)
+                 compilation-error-screen-columns screen-columns_))
+            (compilation-first-column
+             (if (local-variable-p 'compilation-first-column)
+                 compilation-first-column first-column_)))
+
+        (save-restriction
+          (widen)
+          (goto-char (point-min))
+          (dolist (line_ (reverse (cddr (compilation--loc->file-struct loc_))))
+            (when (car line_)
+              (compilation-beginning-of-line (- (car line_) last_ -1))
+              (setq last_ (car line_)))
+            (dolist (col_ (cdr line_))
+              (if (compilation--loc->col col_)
+                  (if (eq (compilation--loc->col col_) -1)
+                      (end-of-line)
+                    (compilation-move-to-column (compilation--loc->col col_)
+                                                screen-columns_))
+                (beginning-of-line)
+                (skip-chars-forward " \t"))
+              (if (compilation--loc->marker col_)
+                  (set-marker (compilation--loc->marker col_) (point))
+                (setf (compilation--loc->marker col_) (point-marker)))))))))
+
+    (compilation-goto-locus marker_ (compilation--loc->marker loc_)
+                            (compilation--loc->marker end-loc_))
+    (recenter)
+    (setf (compilation--loc->visited loc_) t)))
 
 (defvar compilation-gcpro nil
   "Internal variable used to keep some values from being GC'd.")

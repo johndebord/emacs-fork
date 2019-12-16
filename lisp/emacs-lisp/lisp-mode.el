@@ -280,6 +280,10 @@ This will generate compile-time constants from BINDINGS."
          `(face ,font-lock-warning-face
                 help-echo "This \\ has no effect"))))
 
+;;; John DeBord
+;;; Dec. 15th, 2019
+;;; Replacing syntax highlighting for `lisp-mode`:
+;;; `test' with `test`.
 (let-when-compile
     ((lisp-fdefs '("defmacro" "defun"))
      (lisp-vdefs '("defvar"))
@@ -288,9 +292,6 @@ This will generate compile-time constants from BINDINGS."
                 "when" "unless" "with-output-to-string"
                 "ignore-errors" "dotimes" "dolist" "declare"))
      (lisp-errs '("warn" "error" "signal"))
-     ;; Elisp constructs.  Now they are update dynamically
-     ;; from obarray but they are also used for setting up
-     ;; the keywords for Common Lisp.
      (el-fdefs '("defsubst" "cl-defsubst" "define-inline"
                  "define-advice" "defadvice" "defalias"
                  "define-derived-mode" "define-minor-mode"
@@ -301,24 +302,20 @@ This will generate compile-time constants from BINDINGS."
                  "defface"))
      (el-tdefs '("defgroup" "deftheme"))
      (el-errs '("user-error"))
-     ;; Common-Lisp constructs supported by EIEIO.  FIXME: namespace.
      (eieio-fdefs '("defgeneric" "defmethod"))
      (eieio-tdefs '("defclass"))
-     ;; Common-Lisp constructs supported by cl-lib.
      (cl-lib-fdefs '("defmacro" "defsubst" "defun" "defmethod" "defgeneric"))
      (cl-lib-tdefs '("defstruct" "deftype"))
      (cl-lib-errs '("assert" "check-type"))
-     ;; Common-Lisp constructs not supported by cl-lib.
      (cl-fdefs '("defsetf" "define-method-combination"
                  "define-condition" "define-setf-expander"
-                 ;; "define-function"??
                  "define-compiler-macro" "define-modify-macro"))
      (cl-vdefs '("define-symbol-macro" "defconstant" "defparameter"))
      (cl-tdefs '("defpackage" "defstruct" "deftype"))
      (cl-kw '("block" "break" "case" "ccase" "compiler-let" "ctypecase"
               "declaim" "destructuring-bind" "do" "do*"
               "ecase" "etypecase" "eval-when" "flet" "flet*"
-              "go" "handler-case" "handler-bind" "in-package" ;; "inline"
+              "go" "handler-case" "handler-bind" "in-package"
               "labels" "letf" "locally" "loop"
               "macrolet" "multiple-value-bind" "multiple-value-prog1"
               "proclaim" "prog" "prog*" "progv"
@@ -330,12 +327,12 @@ This will generate compile-time constants from BINDINGS."
               "with-open-stream" "with-package-iterator"
               "with-simple-restart" "with-slots" "with-standard-io-syntax"))
      (cl-errs '("abort" "cerror")))
+
   (let ((vdefs (eval-when-compile
                  (append lisp-vdefs el-vdefs cl-vdefs)))
         (tdefs (eval-when-compile
                  (append el-tdefs eieio-tdefs cl-tdefs cl-lib-tdefs
                          (mapcar (lambda (s) (concat "cl-" s)) cl-lib-tdefs))))
-        ;; Elisp and Common Lisp definers.
         (el-defs-re (eval-when-compile
                       (regexp-opt (append lisp-fdefs lisp-vdefs
                                           el-fdefs el-vdefs el-tdefs
@@ -349,10 +346,8 @@ This will generate compile-time constants from BINDINGS."
                                           eieio-fdefs eieio-tdefs
                                           cl-fdefs cl-vdefs cl-tdefs)
                                   t)))
-        ;; Common Lisp keywords (Elisp keywords are handled dynamically).
         (cl-kws-re (eval-when-compile
                      (regexp-opt (append lisp-kw cl-kw) t)))
-        ;; Elisp and Common Lisp "errors".
         (el-errs-re (eval-when-compile
                       (regexp-opt (append (mapcar (lambda (s) (concat "cl-" s))
                                                   cl-lib-errs)
@@ -360,98 +355,78 @@ This will generate compile-time constants from BINDINGS."
                                   t)))
         (cl-errs-re (eval-when-compile
                       (regexp-opt (append lisp-errs cl-lib-errs cl-errs) t))))
+
     (dolist (v vdefs)
       (put (intern v) 'lisp-define-type 'var))
     (dolist (v tdefs)
       (put (intern v) 'lisp-define-type 'type))
 
     (define-obsolete-variable-alias 'lisp-font-lock-keywords-1
-        'lisp-el-font-lock-keywords-1 "24.4")
+      'lisp-el-font-lock-keywords-1 "24.4")
+
     (defconst lisp-el-font-lock-keywords-1
-      `( ;; Definitions.
+      `(
         (,(concat "(" el-defs-re "\\_>"
-                  ;; Any whitespace and defined object.
                   "[ \t']*"
-                  "\\(([ \t']*\\)?" ;; An opening paren.
+                  "\\(([ \t']*\\)?"
                   "\\(\\(setf\\)[ \t]+" lisp-mode-symbol-regexp
                   "\\|" lisp-mode-symbol-regexp "\\)?")
-          (1 font-lock-keyword-face)
-          (3 (let ((type (get (intern-soft (match-string 1)) 'lisp-define-type)))
-               (cond ((eq type 'var) font-lock-variable-name-face)
-                     ((eq type 'type) font-lock-type-face)
-                     ;; If match-string 2 is non-nil, we encountered a
-                     ;; form like (defalias (intern (concat s "-p"))),
-                     ;; unless match-string 4 is also there.  Then its a
-                     ;; defmethod with (setf foo) as name.
-                     ((or (not (match-string 2)) ;; Normal defun.
-                          (and (match-string 2)  ;; Setf method.
-                               (match-string 4)))
-                      font-lock-function-name-face)))
-             nil t))
-        ;; Emacs Lisp autoload cookies.  Supports the slightly different
-        ;; forms used by mh-e, calendar, etc.
-        ("^;;;###\\([-a-z]*autoload\\)" 1 font-lock-warning-face prepend))
-      "Subdued level highlighting for Emacs Lisp mode.")
+         (1 font-lock-keyword-face)
+         (3 (let ((type (get (intern-soft (match-string 1)) 'lisp-define-type)))
+              (cond ((eq type 'var) font-lock-variable-name-face)
+                    ((eq type 'type) font-lock-type-face)
+                    ((or (not (match-string 2))
+                         (and (match-string 2)
+                              (match-string 4)))
+                     font-lock-function-name-face)))
+            nil t))
+        ("^;;;###\\([-a-z]*autoload\\)" 1 font-lock-warning-face prepend)))
 
     (defconst lisp-cl-font-lock-keywords-1
-      `( ;; Definitions.
+      `(
         (,(concat "(" cl-defs-re "\\_>"
-                  ;; Any whitespace and defined object.
                   "[ \t']*"
-                  "\\(([ \t']*\\)?" ;; An opening paren.
+                  "\\(([ \t']*\\)?"
                   "\\(\\(setf\\)[ \t]+" lisp-mode-symbol-regexp
                   "\\|" lisp-mode-symbol-regexp "\\)?")
-          (1 font-lock-keyword-face)
-          (3 (let ((type (get (intern-soft (match-string 1)) 'lisp-define-type)))
-               (cond ((eq type 'var) font-lock-variable-name-face)
-                     ((eq type 'type) font-lock-type-face)
-                     ((or (not (match-string 2)) ;; Normal defun.
-                          (and (match-string 2)  ;; Setf function.
-                               (match-string 4)))
-                      font-lock-function-name-face)))
-             nil t)))
-      "Subdued level highlighting for Lisp modes.")
+         (1 font-lock-keyword-face)
+         (3 (let ((type (get (intern-soft (match-string 1)) 'lisp-define-type)))
+              (cond ((eq type 'var) font-lock-variable-name-face)
+                    ((eq type 'type) font-lock-type-face)
+                    ((or (not (match-string 2))
+                         (and (match-string 2)
+                              (match-string 4)))
+                     font-lock-function-name-face)))
+            nil t))))
 
     (define-obsolete-variable-alias 'lisp-font-lock-keywords-2
-        'lisp-el-font-lock-keywords-2 "24.4")
+      'lisp-el-font-lock-keywords-2 "24.4")
+
     (defconst lisp-el-font-lock-keywords-2
       (append
        lisp-el-font-lock-keywords-1
-       `( ;; Regexp negated char group.
+       `(
          ("\\[\\(\\^\\)" 1 font-lock-negation-char-face prepend)
-         ;; Erroneous structures.
          (,(concat "(" el-errs-re "\\_>")
           (1 font-lock-warning-face))
-         ;; Control structures.  Common Lisp forms.
          (lisp--el-match-keyword . 1)
-         ;; Exit/Feature symbols as constants.
          (,(concat "(\\(catch\\|throw\\|featurep\\|provide\\|require\\)\\_>"
                    "[ \t']*\\(" lisp-mode-symbol-regexp "\\)?")
-           (1 font-lock-keyword-face)
-           (2 font-lock-constant-face nil t))
-         ;; Words inside \\[] tend to be for `substitute-command-keys'.
+          (1 font-lock-keyword-face)
+          (2 font-lock-constant-face nil t))
          (,(concat "\\\\\\\\\\[\\(" lisp-mode-symbol-regexp "\\)\\]")
           (1 font-lock-constant-face prepend))
-         ;; Ineffective backslashes (typically in need of doubling).
          ("\\(\\\\\\)\\([^\"\\]\\)"
           (1 (elisp--font-lock-backslash) prepend))
-         ;; Words inside ‘’ and `' tend to be symbol names.
-         (,(concat "[`‘]\\(\\(?:\\sw\\|\\s_\\|\\\\.\\)"
-                   lisp-mode-symbol-regexp "\\)['’]")
+         (,(concat "[`]\\(\\(?:\\sw\\|\\s_\\|\\\\.\\)"
+                   lisp-mode-symbol-regexp "\\)[`]")
           (1 font-lock-constant-face prepend))
-         ;; Constant values.
          (,(concat "\\_<:" lisp-mode-symbol-regexp "\\_>")
           (0 font-lock-builtin-face))
-         ;; ELisp and CLisp `&' keywords as types.
          (,(concat "\\_<\\&" lisp-mode-symbol-regexp "\\_>")
           . font-lock-type-face)
-         ;; ELisp regexp grouping constructs
          (,(lambda (bound)
              (catch 'found
-               ;; The following loop is needed to continue searching after matches
-               ;; that do not occur in strings.  The associated regexp matches one
-               ;; of `\\\\' `\\(' `\\(?:' `\\|' `\\)'.  `\\\\' has been included to
-               ;; avoid highlighting, for example, `\\(' in `\\\\('.
                (while (re-search-forward "\\(\\\\\\\\\\)\\(?:\\(\\\\\\\\\\)\\|\\((\\(?:\\?[0-9]*:\\)?\\|[|)]\\)\\)" bound t)
                  (unless (match-beginning 2)
                    (let ((face (get-text-property (1- (point)) 'face)))
@@ -459,54 +434,34 @@ This will generate compile-time constants from BINDINGS."
                                     (memq 'font-lock-string-face face))
                                (eq 'font-lock-string-face face))
                        (throw 'found t)))))))
-           (1 'font-lock-regexp-grouping-backslash prepend)
-           (3 'font-lock-regexp-grouping-construct prepend))
-         ;; This is too general -- rms.
-         ;; A user complained that he has functions whose names start with `do'
-         ;; and that they get the wrong color.
-         ;; ;; CL `with-' and `do-' constructs
-         ;;("(\\(\\(do-\\|with-\\)\\(\\s_\\|\\w\\)*\\)" 1 font-lock-keyword-face)
+          (1 'font-lock-regexp-grouping-backslash prepend)
+          (3 'font-lock-regexp-grouping-construct prepend))
          (lisp--match-hidden-arg
           (0 '(face font-lock-warning-face
-               help-echo "Hidden behind deeper element; move to another line?")))
-         ))
-      "Gaudy level highlighting for Emacs Lisp mode.")
+                    help-echo "Hidden behind deeper element; move to another line?"))))))
 
     (defconst lisp-cl-font-lock-keywords-2
       (append
        lisp-cl-font-lock-keywords-1
-       `( ;; Regexp negated char group.
+       `(
          ("\\[\\(\\^\\)" 1 font-lock-negation-char-face prepend)
-         ;; Control structures.  Common Lisp forms.
          (,(concat "(" cl-kws-re "\\_>") . 1)
-         ;; Exit/Feature symbols as constants.
          (,(concat "(\\(catch\\|throw\\|provide\\|require\\)\\_>"
                    "[ \t']*\\(" lisp-mode-symbol-regexp "\\)?")
-           (1 font-lock-keyword-face)
-           (2 font-lock-constant-face nil t))
-         ;; Erroneous structures.
+          (1 font-lock-keyword-face)
+          (2 font-lock-constant-face nil t))
          (,(concat "(" cl-errs-re "\\_>")
-           (1 font-lock-warning-face))
-         ;; Words inside ‘’ and `' tend to be symbol names.
-         (,(concat "[`‘]\\(\\(?:\\sw\\|\\s_\\|\\\\.\\)"
-                   lisp-mode-symbol-regexp "\\)['’]")
+          (1 font-lock-warning-face))
+         (,(concat "[`]\\(\\(?:\\sw\\|\\s_\\|\\\\.\\)"
+                   lisp-mode-symbol-regexp "\\)[`]")
           (1 font-lock-constant-face prepend))
-         ;; Constant values.
          (,(concat "\\_<:" lisp-mode-symbol-regexp "\\_>")
           (0 font-lock-builtin-face))
-         ;; ELisp and CLisp `&' keywords as types.
          (,(concat "\\_<\\&" lisp-mode-symbol-regexp "\\_>")
           . font-lock-type-face)
-         ;; This is too general -- rms.
-         ;; A user complained that he has functions whose names start with `do'
-         ;; and that they get the wrong color.
-         ;; ;; CL `with-' and `do-' constructs
-         ;;("(\\(\\(do-\\|with-\\)\\(\\s_\\|\\w\\)*\\)" 1 font-lock-keyword-face)
          (lisp--match-hidden-arg
           (0 '(face font-lock-warning-face
-               help-echo "Hidden behind deeper element; move to another line?")))
-         ))
-      "Gaudy level highlighting for Lisp modes.")))
+                    help-echo "Hidden behind deeper element; move to another line?"))))))))
 
 (define-obsolete-variable-alias 'lisp-font-lock-keywords
   'lisp-el-font-lock-keywords "24.4")

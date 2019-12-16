@@ -1320,31 +1320,13 @@ If ARG is the atom `-', scroll upward by nearly full screen."
 (defvar cua--saved-state nil)
 (defvar delete-selection-save-to-register)
 
-;;;###autoload
+;;; John DeBord
+;;; Dec. 15th, 2019
+;;; Setting `global` to `nil`, so that I may become aware of entering
+;;; a mode that I have no customized yet; thus forcing me to add
+;;; `(cua-mode 1)` in the hook of said mode.
 (define-minor-mode cua-mode
-  "Toggle Common User Access style editing (CUA mode).
-With a prefix argument ARG, enable CUA mode if ARG is positive,
-and disable it otherwise.  If called from Lisp, enable the mode
-if ARG is omitted or nil.
-
-CUA mode is a global minor mode.  When enabled, typed text
-replaces the active selection, and you can use C-z, C-x, C-c, and
-C-v to undo, cut, copy, and paste in addition to the normal Emacs
-bindings.  The C-x and C-c keys only do cut and copy when the
-region is active, so in most cases, they do not conflict with the
-normal function of these prefix keys.
-
-If you really need to perform a command which starts with one of
-the prefix keys even when the region is active, you have three
-options:
-- press the prefix key twice very quickly (within 0.2 seconds),
-- press the prefix key and the following key within 0.2 seconds, or
-- use the SHIFT key with the prefix key, i.e. C-S-x or C-S-c.
-
-You can customize `cua-enable-cua-keys' to completely disable the
-CUA bindings, or `cua-prefix-override-inhibit-delay' to change
-the prefix fallback behavior."
-  :global t
+  :global nil
   :group 'cua
   :set-after '(cua-enable-modeline-indications
 	       cua-remap-control-v cua-remap-control-z
@@ -1398,7 +1380,6 @@ the prefix fallback behavior."
 	(message "CUA mode disabled.%s"
 		 (if (nth 0 cua--saved-state) " Delete-Selection enabled" "")))
     (setq cua--saved-state nil))))
-
 
 ;;;###autoload
 (defun cua-selection-mode (arg)

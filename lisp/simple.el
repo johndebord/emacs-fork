@@ -8684,37 +8684,13 @@ call `normal-erase-is-backspace-mode' (which see) instead."
              normal-erase-is-backspace)
            1 0)))))
 
+;;; John DeBord
+;;; Dec. 1st, 2019
+;;; Commenting out due to recieving the error:
+;;; `error: Key sequence ESC <C-delete> starts with
+;;; non-prefix key ESC`
 (define-minor-mode normal-erase-is-backspace-mode
-  "Toggle the Erase and Delete mode of the Backspace and Delete keys.
-With a prefix argument ARG, enable this feature if ARG is
-positive, and disable it otherwise.  If called from Lisp, enable
-the mode if ARG is omitted or nil.
-
-On window systems, when this mode is on, Delete is mapped to C-d
-and Backspace is mapped to DEL; when this mode is off, both
-Delete and Backspace are mapped to DEL.  (The remapping goes via
-`local-function-key-map', so binding Delete or Backspace in the
-global or local keymap will override that.)
-
-In addition, on window systems, the bindings of C-Delete, M-Delete,
-C-M-Delete, C-Backspace, M-Backspace, and C-M-Backspace are changed in
-the global keymap in accordance with the functionality of Delete and
-Backspace.  For example, if Delete is remapped to C-d, which deletes
-forward, C-Delete is bound to `kill-word', but if Delete is remapped
-to DEL, which deletes backward, C-Delete is bound to
-`backward-kill-word'.
-
-If not running on a window system, a similar effect is accomplished by
-remapping C-h (normally produced by the Backspace key) and DEL via
-`keyboard-translate': if this mode is on, C-h is mapped to DEL and DEL
-to C-d; if it's off, the keys are not remapped.
-
-When not running on a window system, and this mode is turned on, the
-former functionality of C-h is available on the F1 key.  You should
-probably not turn on this mode on a text-only terminal if you don't
-have both Backspace, Delete and F1 keys.
-
-See also `normal-erase-is-backspace'."
+  nil
   :variable ((eq (terminal-parameter nil 'normal-erase-is-backspace) 1)
              . (lambda (v)
                  (setf (terminal-parameter nil 'normal-erase-is-backspace)
@@ -8722,18 +8698,12 @@ See also `normal-erase-is-backspace'."
   (let ((enabled (eq 1 (terminal-parameter
                         nil 'normal-erase-is-backspace))))
 
-    (cond ((or (memq window-system '(x w32 ns pc))
-	       (memq system-type '(ms-dos windows-nt)))
+    (cond ((display-symbol-keys-p)
 	   (let ((bindings
-                  ;;; John DeBord
-                  ;;; Dec. 1st, 2019
-                  ;;; Commenting out due to recieving the error:
-                  ;;; `error: Key sequence ESC <C-delete> starts with
-                  ;;; non-prefix key ESC`
-		  ;; `(([M-delete] [M-backspace])
+		  ;; '(([M-delete] [M-backspace])
 		  ;;   ([C-M-delete] [C-M-backspace])
 		  ;;   ([?\e C-delete] [?\e C-backspace]))
-                  ))
+		  ))
 
 	     (if enabled
 		 (progn
@@ -8741,10 +8711,6 @@ See also `normal-erase-is-backspace'."
 		   (define-key local-function-key-map [kp-delete] [deletechar])
 		   (define-key local-function-key-map [backspace] [?\C-?])
                    (dolist (b bindings)
-                     ;; Not sure if input-decode-map is really right, but
-                     ;; keyboard-translate-table (used below) only works
-                     ;; for integer events, and key-translation-table is
-                     ;; global (like the global-map, used earlier).
                      (define-key input-decode-map (car b) nil)
                      (define-key input-decode-map (cadr b) nil)))
 	       (define-key local-function-key-map [delete] [?\C-?])
