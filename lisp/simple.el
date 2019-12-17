@@ -8684,6 +8684,11 @@ call `normal-erase-is-backspace-mode' (which see) instead."
              normal-erase-is-backspace)
            1 0)))))
 
+;;; John DeBord
+;;; Dec. 1st, 2019
+;;; Commenting out due to recieving the error:
+;;; `error: Key sequence ESC <C-delete> starts with
+;;; non-prefix key ESC`
 (define-minor-mode normal-erase-is-backspace-mode
   "Toggle the Erase and Delete mode of the Backspace and Delete keys.
 With a prefix argument ARG, enable this feature if ARG is
@@ -8725,11 +8730,6 @@ See also `normal-erase-is-backspace'."
     (cond ((or (memq window-system '(x w32 ns pc))
 	       (memq system-type '(ms-dos windows-nt)))
 	   (let ((bindings
-		  ;;; John DeBord
-		  ;;; Dec. 1st, 2019
-		  ;;; Commenting out due to recieving the error:
-                  ;;; `error: Key sequence ESC <C-delete> starts with
-                  ;;; non-prefix key ESC`
 		  ;; `(([M-delete] [M-backspace])
 		  ;;   ([C-M-delete] [C-M-backspace])
 		  ;;   ([?\e C-delete] [?\e C-backspace]))

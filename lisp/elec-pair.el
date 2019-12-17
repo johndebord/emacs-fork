@@ -571,21 +571,14 @@ ARG and KILLP are passed directly to
     map)
   "Keymap used by `electric-pair-mode'.")
 
-;;;###autoload
+;;; John DeBord
+;;; Dec. 15th, 2019
+;;; Setting `global` to `nil`, so that I may become aware of entering
+;;; a mode that I have no customized yet; thus forcing me to add
+;;; `(electric-pair-mode 1)` in the hook of said mode.
 (define-minor-mode electric-pair-mode
-  "Toggle automatic parens pairing (Electric Pair mode).
-With a prefix argument ARG, enable Electric Pair mode if ARG is
-positive, and disable it otherwise.  If called from Lisp, enable
-the mode if ARG is omitted or nil.
-
-Electric Pair mode is a global minor mode.  When enabled, typing
-an open parenthesis automatically inserts the corresponding
-closing parenthesis, and vice versa.  (Likewise for brackets, etc.).
-If the region is active, the parentheses (brackets, etc.) are
-inserted around the region instead.
-
-To toggle the mode in a single buffer, use `electric-pair-local-mode'."
-  :global t :group 'electricity
+  :global nil
+  :group 'electricity
   (if electric-pair-mode
       (progn
 	(add-hook 'post-self-insert-hook

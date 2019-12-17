@@ -1529,48 +1529,32 @@ to `compilation-error-regexp-alist' if RULES is nil."
                         'compile-history)))
 
 
-;;;###autoload
-(defun compile (command &optional comint)
-  "Compile the program including the current buffer.  Default: run `make'.
-Runs COMMAND, a shell command, in a separate process asynchronously
-with output going to the buffer `*compilation*'.
-
-You can then use the command \\[next-error] to find the next error message
-and move to the source code that caused it.
-
-If optional second arg COMINT is t the buffer will be in Comint mode with
-`compilation-shell-minor-mode'.
-
-Interactively, prompts for the command if the variable
-`compilation-read-command' is non-nil; otherwise uses `compile-command'.
-With prefix arg, always prompts.
-Additionally, with universal prefix arg, compilation buffer will be in
-comint mode, i.e. interactive.
-
-To run more than one compilation at once, start one then rename
-the `*compilation*' buffer to some other name with
-\\[rename-buffer].  Then _switch buffers_ and start the new compilation.
-It will create a new `*compilation*' buffer.
-
-On most systems, termination of the main compilation process
-kills its subprocesses.
-
-The name used for the buffer is actually whatever is returned by
-the function in `compilation-buffer-name-function', so you can set that
-to a function that generates a unique name."
+;;; John DeBord
+;;; Dec. 15th, 2019
+;;; Rework of this function to support proper window switching in
+;;; certain contexts.
+(defun compile (command_ &optional comint_)
   (interactive
    (list
-    (let ((command (eval compile-command)))
+    (let ((command_ (eval compile-command)))
       (if (or compilation-read-command current-prefix-arg)
-	  (compilation-read-command command)
-	command))
+	  (compilation-read-command command_)
+	command_))
     (consp current-prefix-arg)))
-  (unless (equal command (eval compile-command))
-    (setq compile-command command))
+
+  (unless (equal command_ (eval compile-command))
+    (setq compile-command command_))
+
   (save-some-buffers (not compilation-ask-about-save)
                      compilation-save-buffers-predicate)
+
   (setq-default compilation-directory default-directory)
-  (compilation-start command comint))
+  (let ((compilation-window_ (get-buffer-window "*compilation*")))
+    (if (equal compilation-window_ nil)
+        (compilation-start command comint_)
+      (save-window-excursion
+        (select-window compilation-window_)
+        (compilation-start command comint_)))))
 
 ;; run compile with the default command line
 (defun recompile (&optional edit-command)
