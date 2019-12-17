@@ -1551,10 +1551,10 @@ to `compilation-error-regexp-alist' if RULES is nil."
   (setq-default compilation-directory default-directory)
   (let ((compilation-window_ (get-buffer-window "*compilation*")))
     (if (equal compilation-window_ nil)
-        (compilation-start command comint_)
+        (compilation-start command_ comint_)
       (save-window-excursion
         (select-window compilation-window_)
-        (compilation-start command comint_)))))
+        (compilation-start command_ comint_)))))
 
 ;; run compile with the default command line
 (defun recompile (&optional edit-command)
