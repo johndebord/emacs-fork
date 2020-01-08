@@ -1637,11 +1637,19 @@ this trigger is subscribed to `gdb-buf-publisher' and called with
     (define-key map "\C-d" 'gdb-io-eof)
     map))
 
-;; We want to use comint because it has various nifty and familiar features.
+;; ;; We want to use comint because it has various nifty and familiar features.
+;; (define-derived-mode gdb-inferior-io-mode comint-mode "Inferior I/O"
+;;   "Major mode for gdb inferior-io."
+;;   :syntax-table nil :abbrev-table nil
+;;   (make-comint-in-buffer "gdb-inferior" (current-buffer) nil))
+
+;;; John DeBord
+;;; Dec. 27th, 2019
+;;; Set the `header-line-format` appropriately.
 (define-derived-mode gdb-inferior-io-mode comint-mode "Inferior I/O"
-  "Major mode for gdb inferior-io."
   :syntax-table nil :abbrev-table nil
-  (make-comint-in-buffer "gdb-inferior" (current-buffer) nil))
+  (make-comint-in-buffer "gdb-inferior" (current-buffer) nil)
+  (setq header-line-format jd:gdb-inferior-io-header))
 
 (defcustom gdb-display-io-nopopup nil
   "When non-nil, and the `gdb-inferior-io' buffer is buried, don't pop it up."
@@ -1649,13 +1657,20 @@ this trigger is subscribed to `gdb-buf-publisher' and called with
   :group 'gdb
   :version "25.1")
 
+;; (defun gdb-inferior-filter (proc string)
+;;   (unless (string-equal string "")
+;;     (let (buf)
+;;       (unless (and gdb-display-io-nopopup
+;;                    (setq buf (gdb-get-buffer 'gdb-inferior-io))
+;;                    (null (get-buffer-window buf)))
+;;         (gdb-display-buffer (gdb-get-buffer-create 'gdb-inferior-io)))))
+;;   (with-current-buffer (gdb-get-buffer-create 'gdb-inferior-io)
+;;     (comint-output-filter proc string)))
+
+;;; John DeBord
+;;; Dec. 27th, 2019
+;;; Fix for odd buffer behavior.
 (defun gdb-inferior-filter (proc string)
-  (unless (string-equal string "")
-    (let (buf)
-      (unless (and gdb-display-io-nopopup
-                   (setq buf (gdb-get-buffer 'gdb-inferior-io))
-                   (null (get-buffer-window buf)))
-        (gdb-display-buffer (gdb-get-buffer-create 'gdb-inferior-io)))))
   (with-current-buffer (gdb-get-buffer-create 'gdb-inferior-io)
     (comint-output-filter proc string)))
 
@@ -3239,11 +3254,22 @@ corresponding to the mode line clicked."
    (gdb-propertize-header "Threads" gdb-threads-buffer
 			  nil nil mode-line)))
 
+;; (define-derived-mode gdb-threads-mode gdb-parent-mode "Threads"
+;;   "Major mode for GDB threads."
+;;   (setq gdb-thread-position (make-marker))
+;;   (add-to-list 'overlay-arrow-variable-list 'gdb-thread-position)
+;;   (setq header-line-format gdb-threads-header)
+;;   (set (make-local-variable 'font-lock-defaults)
+;;        '(gdb-threads-font-lock-keywords))
+;;   'gdb-invalidate-threads)
+
+;;; John DeBord
+;;; Dec. 27th, 2019
+;;; Set the `header-line-format` appropriately.
 (define-derived-mode gdb-threads-mode gdb-parent-mode "Threads"
-  "Major mode for GDB threads."
+  (setq header-line-format jd:gdb-threads-header)
   (setq gdb-thread-position (make-marker))
   (add-to-list 'overlay-arrow-variable-list 'gdb-thread-position)
-  (setq header-line-format gdb-threads-header)
   (set (make-local-variable 'font-lock-defaults)
        '(gdb-threads-font-lock-keywords))
   'gdb-invalidate-threads)
@@ -3868,9 +3894,21 @@ DOC is an optional documentation string."
     (define-key map "q" 'kill-current-buffer)
     map))
 
+;; (define-derived-mode gdb-disassembly-mode gdb-parent-mode "Disassembly"
+;;   "Major mode for GDB disassembly information."
+;;   ;; TODO Rename overlay variable for disassembly mode
+;;   (add-to-list 'overlay-arrow-variable-list 'gdb-disassembly-position)
+;;   (setq fringes-outside-margins t)
+;;   (set (make-local-variable 'gdb-disassembly-position) (make-marker))
+;;   (set (make-local-variable 'font-lock-defaults)
+;;        '(gdb-disassembly-font-lock-keywords))
+;;   'gdb-invalidate-disassembly)
+
+;;; John DeBord
+;;; Dec. 27th, 2019
+;;; Set the `header-line-format` appropriately.
 (define-derived-mode gdb-disassembly-mode gdb-parent-mode "Disassembly"
-  "Major mode for GDB disassembly information."
-  ;; TODO Rename overlay variable for disassembly mode
+  (setq header-line-format jd:gdb-disassembly-header)
   (add-to-list 'overlay-arrow-variable-list 'gdb-disassembly-position)
   (setq fringes-outside-margins t)
   (set (make-local-variable 'gdb-disassembly-position) (make-marker))
@@ -3878,6 +3916,46 @@ DOC is an optional documentation string."
        '(gdb-disassembly-font-lock-keywords))
   'gdb-invalidate-disassembly)
 
+;; (defun gdb-disassembly-handler-custom ()
+;;   (let* ((instructions (bindat-get-field (gdb-json-partial-output) 'asm_insns))
+;;          (address (bindat-get-field (gdb-current-buffer-frame) 'addr))
+;;          (table (make-gdb-table))
+;;          (marked-line nil))
+;;     (dolist (instr instructions)
+;;       (gdb-table-add-row table
+;;                          (list
+;;                           (bindat-get-field instr 'address)
+;;                           (let
+;;                               ((func-name (bindat-get-field instr 'func-name))
+;;                                (offset (bindat-get-field instr 'offset)))
+;;                             (if func-name
+;;                                 (format "<%s+%s>:" func-name offset)
+;;                               ""))
+;;                           (bindat-get-field instr 'inst)))
+;;       (when (string-equal (bindat-get-field instr 'address)
+;;                           address)
+;;         (progn
+;;           (setq marked-line (length (gdb-table-rows table)))
+;;           (setq fringe-indicator-alist
+;;                 (if (string-equal gdb-frame-number "0")
+;;                     nil
+;;                   '((overlay-arrow . hollow-right-triangle)))))))
+;;     (insert (gdb-table-string table " "))
+;;     (gdb-disassembly-place-breakpoints)
+;;     ;; Mark current position with overlay arrow and scroll window to
+;;     ;; that point
+;;     (when marked-line
+;;       (let ((window (get-buffer-window (current-buffer) 0)))
+;;         (set-window-point window (gdb-mark-line marked-line
+;;                                                 gdb-disassembly-position))))
+;;     (setq mode-name
+;;           (gdb-current-context-mode-name
+;;            (concat "Disassembly: "
+;;                    (bindat-get-field (gdb-current-buffer-frame) 'func))))))
+
+;;; John DeBord
+;;; Dec. 27th, 2019
+;;; Fix for odd buffer behavior.
 (defun gdb-disassembly-handler-custom ()
   (let* ((instructions (bindat-get-field (gdb-json-partial-output) 'asm_insns))
          (address (bindat-get-field (gdb-current-buffer-frame) 'addr))
@@ -3904,12 +3982,19 @@ DOC is an optional documentation string."
                   '((overlay-arrow . hollow-right-triangle)))))))
     (insert (gdb-table-string table " "))
     (gdb-disassembly-place-breakpoints)
-    ;; Mark current position with overlay arrow and scroll window to
-    ;; that point
-    (when marked-line
-      (let ((window (get-buffer-window (current-buffer) 0)))
-        (set-window-point window (gdb-mark-line marked-line
-                                                gdb-disassembly-position))))
+
+    (if (get-buffer-window (gdb-disassembly-buffer-name))
+        (progn
+          (when marked-line
+            (let ((window (get-buffer-window (gdb-disassembly-buffer-name) 0)))
+              (set-window-point window (gdb-mark-line marked-line
+                                                      gdb-disassembly-position)))))
+      (if (get-buffer (gdb-disassembly-buffer-name))
+          (progn
+            (when marked-line
+              (with-current-buffer (gdb-disassembly-buffer-name)
+                (goto-char (gdb-mark-line marked-line
+                                          gdb-disassembly-position)))))))
     (setq mode-name
           (gdb-current-context-mode-name
            (concat "Disassembly: "
@@ -3937,10 +4022,17 @@ DOC is an optional documentation string."
 			  "mouse-1: select" mode-line-highlight
                           mode-line-inactive)))
 
-;;; Breakpoints view
+;; ;;; Breakpoints view
+;; (define-derived-mode gdb-breakpoints-mode gdb-parent-mode "Breakpoints"
+;;   "Major mode for gdb breakpoints."
+;;   (setq header-line-format gdb-breakpoints-header)
+;;   'gdb-invalidate-breakpoints)
+
+;;; John DeBord
+;;; Dec. 27th, 2019
+;;; Set the `header-line-format` appropriately.
 (define-derived-mode gdb-breakpoints-mode gdb-parent-mode "Breakpoints"
-  "Major mode for gdb breakpoints."
-  (setq header-line-format gdb-breakpoints-header)
+  (setq header-line-format jd:gdb-breakpoints-header)
   'gdb-invalidate-breakpoints)
 
 (defun gdb-toggle-breakpoint ()
@@ -4079,11 +4171,23 @@ member."
   '(("in \\([^ ]+\\)"  (1 font-lock-function-name-face)))
   "Font lock keywords used in `gdb-frames-mode'.")
 
+;; (define-derived-mode gdb-frames-mode gdb-parent-mode "Frames"
+;;   "Major mode for gdb call stack."
+;;   (setq gdb-stack-position (make-marker))
+;;   (add-to-list 'overlay-arrow-variable-list 'gdb-stack-position)
+;;   (setq truncate-lines t)  ;; Make it easier to see overlay arrow.
+;;   (set (make-local-variable 'font-lock-defaults)
+;;        '(gdb-frames-font-lock-keywords))
+;;   'gdb-invalidate-frames)
+
+;;; John DeBord
+;;; Dec. 27th, 2019
+;;; Set the `header-line-format` appropriately.
 (define-derived-mode gdb-frames-mode gdb-parent-mode "Frames"
-  "Major mode for gdb call stack."
+  (setq header-line-format jd:gdb-stack-header)
   (setq gdb-stack-position (make-marker))
   (add-to-list 'overlay-arrow-variable-list 'gdb-stack-position)
-  (setq truncate-lines t)  ;; Make it easier to see overlay arrow.
+  (setq truncate-lines t)
   (set (make-local-variable 'font-lock-defaults)
        '(gdb-frames-font-lock-keywords))
   'gdb-invalidate-frames)
@@ -4105,10 +4209,20 @@ member."
 
 
 ;; Locals buffer.
-;; uses "-stack-list-locals --simple-values". Needs GDB 6.1 onwards.
+;; ;; uses "-stack-list-locals --simple-values". Needs GDB 6.1 onwards.
+;; (def-gdb-trigger-and-handler
+;;   gdb-invalidate-locals
+;;   (concat (gdb-current-context-command "-stack-list-locals")
+;;           " --simple-values")
+;;   gdb-locals-handler gdb-locals-handler-custom
+;;   '(start update))
+
+;;; John DeBord
+;;; Dec. 27th, 2019
+;;; Use `-stack-list-variables` instead of `-stack-list-locals`.
 (def-gdb-trigger-and-handler
   gdb-invalidate-locals
-  (concat (gdb-current-context-command "-stack-list-locals")
+  (concat (gdb-current-context-command "-stack-list-variables")
           " --simple-values")
   gdb-locals-handler gdb-locals-handler-custom
   '(start update))
@@ -4147,10 +4261,47 @@ member."
       (gud-basic-call
        (concat  "-gdb-set variable " var " = " value)))))
 
-;; Don't display values of arrays or structures.
-;; These can be expanded using gud-watch.
+;; ;; Don't display values of arrays or structures.
+;; ;; These can be expanded using gud-watch.
+;; (defun gdb-locals-handler-custom ()
+;;   (let ((locals-list (bindat-get-field (gdb-json-partial-output) 'locals))
+;;         (table (make-gdb-table)))
+;;     (dolist (local locals-list)
+;;       (let ((name (bindat-get-field local 'name))
+;;             (value (bindat-get-field local 'value))
+;;             (type (bindat-get-field local 'type)))
+;;         (when (not value)
+;;           (setq value "<complex data type>"))
+;;         (if (or (not value)
+;;                 (string-match "\\0x" value))
+;;             (add-text-properties 0 (length name)
+;;                                  `(mouse-face highlight
+;;                                               help-echo "mouse-2: create watch expression"
+;;                                               local-map ,gdb-locals-watch-map)
+;;                                  name)
+;;           (add-text-properties 0 (length value)
+;;                                `(mouse-face highlight
+;;                                             help-echo "mouse-2: edit value"
+;;                                             local-map ,gdb-edit-locals-map-1)
+;;                                value))
+;;         (gdb-table-add-row
+;;          table
+;;          (list
+;;           (propertize type 'font-lock-face font-lock-type-face)
+;;           (propertize name 'font-lock-face font-lock-variable-name-face)
+;;           value)
+;;          `(gdb-local-variable ,local))))
+;;     (insert (gdb-table-string table " "))
+;;     (setq mode-name
+;;           (gdb-current-context-mode-name
+;;            (concat "Locals: "
+;;                    (bindat-get-field (gdb-current-buffer-frame) 'func))))))
+
+;;; John DeBord
+;;; Dec. 27th, 2019
+;;; Use binary data field `'variables` in place of `'locals`.
 (defun gdb-locals-handler-custom ()
-  (let ((locals-list (bindat-get-field (gdb-json-partial-output) 'locals))
+  (let ((locals-list (bindat-get-field (gdb-json-partial-output) 'variables))
         (table (make-gdb-table)))
     (dolist (local locals-list)
       (let ((name (bindat-get-field local 'name))
@@ -4163,6 +4314,7 @@ member."
             (add-text-properties 0 (length name)
                                  `(mouse-face highlight
                                               help-echo "mouse-2: create watch expression"
+
                                               local-map ,gdb-locals-watch-map)
                                  name)
           (add-text-properties 0 (length value)
@@ -4204,9 +4356,16 @@ member."
                              gdb-thread-number) t)))
     map))
 
+;; (define-derived-mode gdb-locals-mode gdb-parent-mode "Locals"
+;;   "Major mode for gdb locals."
+;;   (setq header-line-format gdb-locals-header)
+;;   'gdb-invalidate-locals)
+
+;;; John DeBord
+;;; Dec. 27th, 2019
+;;; Set the `header-line-format` appropriately.
 (define-derived-mode gdb-locals-mode gdb-parent-mode "Locals"
-  "Major mode for gdb locals."
-  (setq header-line-format gdb-locals-header)
+  (setq header-line-format jd:gdb-locals-header)
   'gdb-invalidate-locals)
 
 (defun gdb-locals-buffer-name ()
@@ -4304,9 +4463,16 @@ member."
    (gdb-propertize-header "Registers" gdb-registers-buffer
 			  nil nil mode-line)))
 
+;; (define-derived-mode gdb-registers-mode gdb-parent-mode "Registers"
+;;   "Major mode for gdb registers."
+;;   (setq header-line-format gdb-registers-header)
+;;   'gdb-invalidate-registers)
+
+;;; John DeBord
+;;; Dec. 27th, 2019
+;;; Set the `header-line-format` appropriately.
 (define-derived-mode gdb-registers-mode gdb-parent-mode "Registers"
-  "Major mode for gdb registers."
-  (setq header-line-format gdb-registers-header)
+  (setq header-line-format jd:gdb-registers-header)
   'gdb-invalidate-registers)
 
 (defun gdb-registers-buffer-name ()
@@ -4408,12 +4574,23 @@ overlay arrow in source buffer."
   ;; Insert first prompt.
   (setq gdb-filter-output (concat gdb-filter-output gdb-prompt-name)))
 
-;;;; Window management
-(defun gdb-display-buffer (buf)
-  "Show buffer BUF, and make that window dedicated."
-  (let ((window (display-buffer buf)))
-    (set-window-dedicated-p window t)
-    window))
+;; ;;;; Window management
+;; (defun gdb-display-buffer (buf)
+;;   "Show buffer BUF, and make that window dedicated."
+;;   (let ((window (display-buffer buf)))
+;;     (set-window-dedicated-p window t)
+;;     window))
+
+;;; John DeBord
+;;; Dec. 27th, 2019
+;;; Fix bug that caused the point to move to the end of the buffer
+;;; when switching to the differeing gdb windows.
+(defun gdb-display-buffer (buffer)
+  (let ((window_ (display-buffer buffer '(display-buffer-same-window (inhibit-duplicate-buffer . t)))))
+    (unless (equal (buffer-name (window-buffer)) (gdb-disassembly-buffer-name))
+      (with-current-buffer (window-buffer window_)
+        (goto-char (point-min))))
+    window_))
 
   ;; (let ((answer (get-buffer-window buf 0)))
   ;;   (if answer
@@ -4563,10 +4740,19 @@ SPLIT-HORIZONTAL and show BUF in the new window."
   (interactive)
   (display-buffer-other-frame gud-comint-buffer))
 
+;; (defun gdb-display-gdb-buffer ()
+;;   "Display GUD buffer."
+;;   (interactive)
+;;   (pop-to-buffer gud-comint-buffer nil 0))
+
+;;; John DeBord
+;;; Dec. 27th, 2019
+;;; Modify window switching behavior when switching to
+;;; `gud-comint-buffer`.
 (defun gdb-display-gdb-buffer ()
-  "Display GUD buffer."
   (interactive)
-  (pop-to-buffer gud-comint-buffer nil 0))
+  (let ((window (display-buffer gud-comint-buffer '(display-buffer-same-window (inhibit-duplicate-buffer . t)))))
+    window))
 
 (defun gdb-set-window-buffer (name &optional ignore-dedicated window)
   "Set buffer of selected window to NAME and dedicate window.

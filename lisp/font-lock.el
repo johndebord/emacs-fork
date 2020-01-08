@@ -303,6 +303,12 @@ If a number, only buffers greater than this size have fontification messages."
 (defvar font-lock-comment-face		'font-lock-comment-face
   "Face name to use for comments.")
 
+;;; John DeBord
+;;; Jan. 8th, 2020
+;;; Additional face declaration for accentuating symbols in comments.
+(defvar font-lock-comment-symbol-face	'font-lock-comment-symbol-face
+  "Face name to use for symbols in comments.")
+
 (defvar font-lock-comment-delimiter-face 'font-lock-comment-delimiter-face
   "Face name to use for comment delimiters.")
 
@@ -1956,6 +1962,31 @@ Sets various variables using `font-lock-defaults' and
      :foreground "yellow")
     (t :weight bold :slant italic))
   "Font Lock mode face used to highlight comments."
+  :group 'font-lock-faces)
+
+;;; John DeBord
+;;; Jan. 8th, 2020
+;;; Additional face definition for accentuating symbols in comments.
+(defface font-lock-comment-symbol-face
+  '((((class grayscale) (background light))
+     :foreground "DimGray" :weight bold :slant italic)
+    (((class grayscale) (background dark))
+     :foreground "LightGray" :weight bold :slant italic)
+    (((class color) (min-colors 88) (background light))
+     :foreground "Firebrick")
+    (((class color) (min-colors 88) (background dark))
+     :foreground "chocolate1")
+    (((class color) (min-colors 16) (background light))
+     :foreground "red")
+    (((class color) (min-colors 16) (background dark))
+     :foreground "red1")
+    (((class color) (min-colors 8) (background light))
+     :foreground "red")
+    (((class color) (min-colors 8) (background dark))
+     :foreground "yellow")
+    (t :weight bold :slant italic))
+  "Font Lock mode face used to highlight symbols such as: `symbol` in
+comments."
   :group 'font-lock-faces)
 
 (defface font-lock-comment-delimiter-face

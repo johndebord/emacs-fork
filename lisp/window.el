@@ -4623,34 +4623,38 @@ if WINDOW gets deleted or its frame is auto-hidden."
 	(delete-window window)
 	t)))))
 
-(defun bury-buffer (&optional buffer-or-name)
-  "Put BUFFER-OR-NAME at the end of the list of all buffers.
-There it is the least likely candidate for `other-buffer' to
-return; thus, the least likely buffer for \\[switch-to-buffer] to
-select by default.
+;; (defun bury-buffer (&optional buffer-or-name)
+;;   "Put BUFFER-OR-NAME at the end of the list of all buffers.
+;; There it is the least likely candidate for `other-buffer' to
+;; return; thus, the least likely buffer for \\[switch-to-buffer] to
+;; select by default.
+;; You can specify a buffer name as BUFFER-OR-NAME, or an actual
+;; buffer object.  If BUFFER-OR-NAME is nil or omitted, bury the
+;; current buffer.  Also, if BUFFER-OR-NAME is nil or omitted,
+;; remove the current buffer from the selected window if it is
+;; displayed there."
+;;   (interactive)
+;;   (let* ((buffer (window-normalize-buffer buffer-or-name)))
+;;     ;; If `buffer-or-name' is not on the selected frame we unrecord it
+;;     ;; although it's not "here" (call it a feature).
+;;     (bury-buffer-internal buffer)
+;;     ;; Handle case where `buffer-or-name' is nil and the current buffer
+;;     ;; is shown in the selected window.
+;;     (cond
+;;      ((or buffer-or-name (not (eq buffer (window-buffer)))))
+;;      ((window--delete nil t))
+;;      (t
+;;       ;; Switch to another buffer in window.
+;;       (set-window-dedicated-p nil nil)
+;;       (switch-to-prev-buffer nil 'bury)))
+;;
+;;     ;; Always return nil.
+;;     nil))
 
-You can specify a buffer name as BUFFER-OR-NAME, or an actual
-buffer object.  If BUFFER-OR-NAME is nil or omitted, bury the
-current buffer.  Also, if BUFFER-OR-NAME is nil or omitted,
-remove the current buffer from the selected window if it is
-displayed there."
-  (interactive)
-  (let* ((buffer (window-normalize-buffer buffer-or-name)))
-    ;; If `buffer-or-name' is not on the selected frame we unrecord it
-    ;; although it's not "here" (call it a feature).
-    (bury-buffer-internal buffer)
-    ;; Handle case where `buffer-or-name' is nil and the current buffer
-    ;; is shown in the selected window.
-    (cond
-     ((or buffer-or-name (not (eq buffer (window-buffer)))))
-     ((window--delete nil t))
-     (t
-      ;; Switch to another buffer in window.
-      (set-window-dedicated-p nil nil)
-      (switch-to-prev-buffer nil 'bury)))
-
-    ;; Always return nil.
-    nil))
+;;; John DeBord
+;;; Dec. 28th, 2019
+;;; Always no-op `bury-buffer`.
+(defun bury-buffer (&rest _))
 
 (defun unbury-buffer ()
   "Switch to the last buffer in the buffer list."

@@ -760,20 +760,37 @@ Return an alist of the form ((FILENAME . (XREF ...)) ...)."
                     (xref-location-group (xref-item-location x)))
                   #'equal))
 
+;; (defun xref--show-xref-buffer (xrefs alist)
+;;   (let ((xref-alist (xref--analyze xrefs)))
+;;     (with-current-buffer (get-buffer-create xref-buffer-name)
+;;       (setq buffer-undo-list nil)
+;;       (let ((inhibit-read-only t)
+;;             (buffer-undo-list t))
+;;         (erase-buffer)
+;;         (xref--insert-xrefs xref-alist)
+;;         (xref--xref-buffer-mode)
+;;         (pop-to-buffer (current-buffer))
+;;         (goto-char (point-min))
+;;         (setq xref--original-window (assoc-default 'window alist)
+;;               xref--original-window-intent (assoc-default 'display-action alist))
+;;         (current-buffer)))))
+
+;;; John DeBord
+;;; Jan. 1st, 2020
+;;; Reorganize the logic of this function so as keep the `company`
+;;; popup from disappearing.
 (defun xref--show-xref-buffer (xrefs alist)
-  (let ((xref-alist (xref--analyze xrefs)))
-    (with-current-buffer (get-buffer-create xref-buffer-name)
+  (let ((xref-alist (xref--analyze xrefs))
+        (xref-buffer (get-buffer-create xref-buffer-name)))
       (setq buffer-undo-list nil)
       (let ((inhibit-read-only t)
             (buffer-undo-list t))
-        (erase-buffer)
-        (xref--insert-xrefs xref-alist)
+        (pop-to-buffer xref-buffer)
         (xref--xref-buffer-mode)
-        (pop-to-buffer (current-buffer))
+        (xref--insert-xrefs xref-alist)
         (goto-char (point-min))
         (setq xref--original-window (assoc-default 'window alist)
-              xref--original-window-intent (assoc-default 'display-action alist))
-        (current-buffer)))))
+              xref--original-window-intent (assoc-default 'display-action alist)))))
 
 
 ;; This part of the UI seems fairly uncontroversial: it reads the
@@ -1124,22 +1141,44 @@ Such as the current syntax table and the applied syntax properties."
                                  (point-max)
                                  syntax-needed)))))
 
+;; (defun xref--collect-matches-1 (regexp file line line-beg line-end syntax-needed)
+;;   (let (matches)
+;;     (when syntax-needed
+;;       (syntax-propertize line-end))
+;;     ;; FIXME: This results in several lines with the same
+;;     ;; summary. Solve with composite pattern?
+;;     (while (and
+;;             ;; REGEXP might match an empty string.  Or line.
+;;             (or (null matches)
+;;                 (> (point) line-beg))
+;;             (re-search-forward regexp line-end t))
+;;       (let* ((beg-column (- (match-beginning 0) line-beg))
+;;              (end-column (- (match-end 0) line-beg))
+;;              (loc (xref-make-file-location file line beg-column))
+;;              (summary (buffer-substring line-beg line-end)))
+;;         (add-face-text-property beg-column end-column 'highlight
+;;                                 t summary)
+;;         (push (xref-make-match summary loc (- end-column beg-column))
+;;               matches)))
+;;     (nreverse matches)))
+
+;;; John DeBord
+;;; Dec. 28th, 2019
+;;; Reorganize the logic of this function so that the symbol being
+;;; searched for is highlighted with `swiper-background-match-face-1`.
 (defun xref--collect-matches-1 (regexp file line line-beg line-end syntax-needed)
   (let (matches)
     (when syntax-needed
       (syntax-propertize line-end))
-    ;; FIXME: This results in several lines with the same
-    ;; summary. Solve with composite pattern?
     (while (and
-            ;; REGEXP might match an empty string.  Or line.
             (or (null matches)
                 (> (point) line-beg))
             (re-search-forward regexp line-end t))
       (let* ((beg-column (- (match-beginning 0) line-beg))
              (end-column (- (match-end 0) line-beg))
              (loc (xref-make-file-location file line beg-column))
-             (summary (buffer-substring line-beg line-end)))
-        (add-face-text-property beg-column end-column 'highlight
+             (summary (buffer-substring-no-properties line-beg line-end)))
+        (add-face-text-property beg-column end-column 'swiper-background-match-face-1
                                 t summary)
         (push (xref-make-match summary loc (- end-column beg-column))
               matches)))
