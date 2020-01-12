@@ -787,6 +787,7 @@ Return an alist of the form ((FILENAME . (XREF ...)) ...)."
             (buffer-undo-list t))
         (pop-to-buffer xref-buffer)
         (xref--xref-buffer-mode)
+        (erase-buffer)
         (xref--insert-xrefs xref-alist)
         (goto-char (point-min))
         (setq xref--original-window (assoc-default 'window alist)
