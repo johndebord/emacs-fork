@@ -2230,8 +2230,12 @@ Global `ispell-quit' set to start location to continue spell session."
 		    (setq num (- char ?0 skipped)))
 
 		  (cond
-		   ((= char ? ) nil)	; accept word this time only
-		   ((= char ?i)		; accept and insert word into pers dict
+		   ;; ((= char ? ) nil)	; accept word this time only
+                   ;;; John DeBord
+                   ;;; Mar. 22nd, 2020
+                   ;;; Always kill the window.
+                   ((= (kbd "<jd:spc>")) nil)	; accept word this time only
+		   ((= char ?i)		        ; accept and insert word into pers dict
 		    (ispell-send-string (concat "*" word "\n"))
 		    (setq ispell-pdict-modified-p '(t)) ; dictionary modified!
 

@@ -4884,6 +4884,23 @@ nil means to not handle the buffer in a particular way.  This
      (bury-or-kill
       (bury-buffer-internal buffer)))))
 
+;; (defun quit-window (&optional kill window)
+;;   "Quit WINDOW and bury its buffer.
+;; WINDOW must be a live window and defaults to the selected one.
+;; With prefix argument KILL non-nil, kill the buffer instead of
+;; burying it.
+;;
+;; According to information stored in WINDOW's `quit-restore' window
+;; parameter either (1) delete WINDOW and its frame, (2) delete
+;; WINDOW, (3) restore the buffer previously displayed in WINDOW,
+;; or (4) make WINDOW display some other buffer than the present
+;; one.  If non-nil, reset `quit-restore' parameter to nil."
+;;   (interactive "P")
+;;   (quit-restore-window window (if kill 'kill 'bury)))
+
+;;; John DeBord
+;;; Mar. 22nd, 2020
+;;; Always kill the window.
 (defun quit-window (&optional kill window)
   "Quit WINDOW and bury its buffer.
 WINDOW must be a live window and defaults to the selected one.
@@ -4896,7 +4913,7 @@ WINDOW, (3) restore the buffer previously displayed in WINDOW,
 or (4) make WINDOW display some other buffer than the present
 one.  If non-nil, reset `quit-restore' parameter to nil."
   (interactive "P")
-  (quit-restore-window window (if kill 'kill 'bury)))
+  (quit-restore-window window 'kill))
 
 (defun quit-windows-on (&optional buffer-or-name kill frame)
   "Quit all windows showing BUFFER-OR-NAME.
