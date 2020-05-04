@@ -3932,7 +3932,10 @@ always effectively nil."
 	   (t
 	    (setq count (1+ count)))))
 
-	(select-window window)
+        ;;; John DeBord
+        ;;; Apr. 24th, 2020
+        ;;; Fix for swapping back and forth buffers consistently.
+	(select-window window 'mark-for-redisplay)
 	;; Always return nil.
 	nil))))
 

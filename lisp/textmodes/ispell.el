@@ -2212,7 +2212,13 @@ Global `ispell-quit' set to start location to continue spell session."
 		    ;; event), stop ispell.  As a special exception,
 		    ;; ignore mouse events occurring in the same frame.
 		    (while (and input-valid (not (characterp char)))
+                      ;;; John DeBord
+                      ;;; May. 3rd, 2020
+                      ;;; Translate `jd:spc` to `SPC`.
 		      (setq char (read-key))
+                      (if (and (symbolp char)
+                               (eq char 'jd:spc))
+                          (setq char ? ))
 		      (setq input-valid
 			    (or (characterp char)
 				(and (mouse-event-p char)
