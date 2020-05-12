@@ -1164,7 +1164,7 @@ Such as the current syntax table and the applied syntax properties."
 ;;     (nreverse matches)))
 
 ;;; John DeBord
-;;; Dec. 28th, 2019
+;;; May 7th, 2020
 ;;; Reorganize the logic of this function so that the symbol being
 ;;; searched for is highlighted with `swiper-background-match-face-1`.
 (defun xref--collect-matches-1 (regexp file line line-beg line-end syntax-needed)
@@ -1179,7 +1179,7 @@ Such as the current syntax table and the applied syntax properties."
              (end-column (- (match-end 0) line-beg))
              (loc (xref-make-file-location file line beg-column))
              (summary (buffer-substring-no-properties line-beg line-end)))
-        (add-face-text-property beg-column end-column 'swiper-background-match-face-1
+        (add-face-text-property beg-column end-column 'highlight
                                 t summary)
         (push (xref-make-match summary loc (- end-column beg-column))
               matches)))
