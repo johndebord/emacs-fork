@@ -2499,68 +2499,63 @@ gud, see `gud-mode'."
 
 (put 'gud-mode 'mode-class 'special)
 
-;; (define-derived-mode gud-mode comint-mode "Debugger"
-;;   "Major mode for interacting with an inferior debugger process.
-;;    You start it up with one of the commands M-x gdb, M-x sdb, M-x dbx,
-;; M-x perldb, M-x xdb, or M-x jdb.  Each entry point finishes by executing a
-;; hook; `gdb-mode-hook', `sdb-mode-hook', `dbx-mode-hook',
-;; `perldb-mode-hook', `xdb-mode-hook', or `jdb-mode-hook' respectively.
-;; After startup, the following commands are available in both the GUD
-;; interaction buffer and any source buffer GUD visits due to a breakpoint stop
-;; or step operation:
-;; \\[gud-break] sets a breakpoint at the current file and line.  In the
-;; GUD buffer, the current file and line are those of the last breakpoint or
-;; step.  In a source buffer, they are the buffer's file and current line.
-;; \\[gud-remove] removes breakpoints on the current file and line.
-;; \\[gud-refresh] displays in the source window the last line referred to
-;; in the gud buffer.
-;; \\[gud-step], \\[gud-next], and \\[gud-stepi] do a step-one-line,
-;; step-one-line (not entering function calls), and step-one-instruction
-;; and then update the source window with the current file and position.
-;; \\[gud-cont] continues execution.
-;; \\[gud-print] tries to find the largest C lvalue or function-call expression
-;; around point, and sends it to the debugger for value display.
-;; The above commands are common to all supported debuggers except xdb which
-;; does not support stepping instructions.
-;; Under gdb, sdb and xdb, \\[gud-tbreak] behaves exactly like \\[gud-break],
-;; except that the breakpoint is temporary; that is, it is removed when
-;; execution stops on it.
-;; Under gdb, dbx, and xdb, \\[gud-up] pops up through an enclosing stack
-;; frame.  \\[gud-down] drops back down through one.
-;; If you are using gdb or xdb, \\[gud-finish] runs execution to the return from
-;; the current function and stops.
-;; All the keystrokes above are accessible in the GUD buffer
-;; with the prefix C-c, and in all buffers through the prefix C-x C-a.
-;; All pre-defined functions for which the concept make sense repeat
-;; themselves the appropriate number of times if you give a prefix
-;; argument.
-;; You may use the `gud-def' macro in the initialization hook to define other
-;; commands.
-;; Other commands for interacting with the debugger process are inherited from
-;; comint mode, which see."
-;;   (setq mode-line-process '(":%s"))
-;;   (define-key (current-local-map) "\C-c\C-l" 'gud-refresh)
-;;   (set (make-local-variable 'gud-last-frame) nil)
-;;   (if (boundp 'tool-bar-map)            ; not --without-x
-;;       (setq-local tool-bar-map gud-tool-bar-map))
-;;   (make-local-variable 'comint-prompt-regexp)
-;;   ;; Don't put repeated commands in command history many times.
-;;   (set (make-local-variable 'comint-input-ignoredups) t)
-;;   (make-local-variable 'paragraph-start)
-;;   (set (make-local-variable 'gud-delete-prompt-marker) (make-marker))
-;;   (add-hook 'kill-buffer-hook 'gud-kill-buffer-hook nil t))
-
-;;; John DeBord
-;;; Dec. 27th, 2019
-;;; Set the `header-line-format` appropriately.
 (define-derived-mode gud-mode comint-mode "Debugger"
-  (setq header-line-format jd:gdb-comint-header)
+  "Major mode for interacting with an inferior debugger process.
+   You start it up with one of the commands M-x gdb, M-x sdb, M-x dbx,
+M-x perldb, M-x xdb, or M-x jdb.  Each entry point finishes by executing a
+hook; `gdb-mode-hook', `sdb-mode-hook', `dbx-mode-hook',
+`perldb-mode-hook', `xdb-mode-hook', or `jdb-mode-hook' respectively.
+After startup, the following commands are available in both the GUD
+interaction buffer and any source buffer GUD visits due to a breakpoint stop
+or step operation:
+\\[gud-break] sets a breakpoint at the current file and line.  In the
+GUD buffer, the current file and line are those of the last breakpoint or
+step.  In a source buffer, they are the buffer's file and current line.
+\\[gud-remove] removes breakpoints on the current file and line.
+\\[gud-refresh] displays in the source window the last line referred to
+in the gud buffer.
+\\[gud-step], \\[gud-next], and \\[gud-stepi] do a step-one-line,
+step-one-line (not entering function calls), and step-one-instruction
+and then update the source window with the current file and position.
+\\[gud-cont] continues execution.
+\\[gud-print] tries to find the largest C lvalue or function-call expression
+around point, and sends it to the debugger for value display.
+The above commands are common to all supported debuggers except xdb which
+does not support stepping instructions.
+Under gdb, sdb and xdb, \\[gud-tbreak] behaves exactly like \\[gud-break],
+except that the breakpoint is temporary; that is, it is removed when
+execution stops on it.
+Under gdb, dbx, and xdb, \\[gud-up] pops up through an enclosing stack
+frame.  \\[gud-down] drops back down through one.
+If you are using gdb or xdb, \\[gud-finish] runs execution to the return from
+the current function and stops.
+All the keystrokes above are accessible in the GUD buffer
+with the prefix C-c, and in all buffers through the prefix C-x C-a.
+All pre-defined functions for which the concept make sense repeat
+themselves the appropriate number of times if you give a prefix
+argument.
+You may use the `gud-def' macro in the initialization hook to define other
+commands.
+Other commands for interacting with the debugger process are inherited from
+comint mode, which see."
+
+  ;;; John DeBord
+  ;;; Original modification:
+  ;;; Dec. 27th, 2019
+  ;;;
+  ;;; Updated:
+  ;;; Jun. 14th, 2020
+  ;;; Cleanup.
+  ;;;
+  ;;; Set the `header-line-format` appropriately.
+  (setq header-line-format jd:gdb-comint-header) ;; jd
   (setq mode-line-process '(":%s"))
   (define-key (current-local-map) "\C-c\C-l" 'gud-refresh)
   (set (make-local-variable 'gud-last-frame) nil)
-  (if (boundp 'tool-bar-map)
+  (if (boundp 'tool-bar-map)            ; not --without-x
       (setq-local tool-bar-map gud-tool-bar-map))
   (make-local-variable 'comint-prompt-regexp)
+  ;; Don't put repeated commands in command history many times.
   (set (make-local-variable 'comint-input-ignoredups) t)
   (make-local-variable 'paragraph-start)
   (set (make-local-variable 'gud-delete-prompt-marker) (make-marker))
@@ -2766,27 +2761,26 @@ It is saved for when this flag is not set.")
 	     ;; if obuf is the gud buffer.
 	     (set-buffer obuf))))))
 
-;; (defun gud-kill-buffer-hook ()
-;;   (setq gud-minor-mode-type gud-minor-mode)
-;;   (condition-case nil
-;;       (progn
-;; 	(kill-process (get-buffer-process (current-buffer)))
-;; 	(delete-process (get-process "gdb-inferior")))
-;;     (error nil)))
-
-;;; John DeBord
-;;; Dec. 27th, 2019
-;;; Modify shutdown behavior when exiting a debugging session.
 (defun gud-kill-buffer-hook ()
   (setq gud-minor-mode-type gud-minor-mode)
   (condition-case nil
       (progn
 	(kill-process (get-buffer-process (current-buffer)))
 	(delete-process (get-process "gdb-inferior")))
-    (error nil))
-  (sleep-for 1)
-  (delete-other-windows)
-  (eshell))
+
+    ;;; John DeBord
+    ;;; Original modification:
+    ;;; Dec. 27th, 2019
+    ;;;
+    ;;; Updated:
+    ;;; Jun. 14th, 2020
+    ;;; Cleanup.
+    ;;;
+    ;;; Modify shutdown behavior when exiting a debugging session.
+    (error nil))         ;; jd
+  (sleep-for 1)          ;; jd
+  (delete-other-windows) ;; jd
+  (eshell))              ;; jd
 
 (defun gud-reset ()
   (dolist (buffer (buffer-list))

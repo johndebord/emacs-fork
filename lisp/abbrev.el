@@ -54,26 +54,31 @@ define global abbrevs instead."
   :group 'abbrev-mode
   :group 'convenience)
 
-;; (define-minor-mode abbrev-mode
-;;   "Toggle Abbrev mode in the current buffer.
-;; With a prefix argument ARG, enable Abbrev mode if ARG is
-;; positive, and disable it otherwise.  If called from Lisp, enable
-;; Abbrev mode if ARG is omitted or nil.
-;; In Abbrev mode, inserting an abbreviation causes it to expand and
-;; be replaced by its expansion."
-;;   ;; It's defined in C, this stops the d-m-m macro defining it again.
-;;   :variable abbrev-mode)
-
-;;; John DeBord
-;;; Dec. 15th, 2019
-;;; Setting `global` to `nil`, so that I may become aware of entering
-;;; a mode that I have not yet customized; thus forcing me to add
-;;; `(abbrev-mode 1)` in the hook of said mode, and to prevent it in
-;;; modes where I don't want it active, unless it has been enabled in
-;;; the given library file(s).
 (define-minor-mode abbrev-mode
-  :global nil
-  :group 'abbrev
+  "Toggle Abbrev mode in the current buffer.
+With a prefix argument ARG, enable Abbrev mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+Abbrev mode if ARG is omitted or nil.
+
+In Abbrev mode, inserting an abbreviation causes it to expand and
+be replaced by its expansion."
+  ;; It's defined in C, this stops the d-m-m macro defining it again.
+
+  ;;; John DeBord
+  ;;; Original modification:
+  ;;; Dec. 15th, 2019
+  ;;;
+  ;;; Updated:
+  ;;; Jun. 14th, 2020
+  ;;; Cleanup.
+  ;;;
+  ;;; Setting `global` to `nil`, so that I may become aware of entering
+  ;;; a mode that I have not yet customized; thus forcing me to add
+  ;;; `(abbrev-mode 1)` in the hook of said mode, and to prevent it in
+  ;;; modes where I don't want it active, unless it has been enabled in
+  ;;; the given library file(s).
+  :global nil    ;; jd
+  :group 'abbrev ;; jd
   :variable abbrev-mode)
 
 (put 'abbrev-mode 'safe-local-variable 'booleanp)

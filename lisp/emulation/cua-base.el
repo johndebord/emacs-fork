@@ -1399,7 +1399,6 @@ the prefix fallback behavior."
 		 (if (nth 0 cua--saved-state) " Delete-Selection enabled" "")))
     (setq cua--saved-state nil))))
 
-
 ;;;###autoload
 (defun cua-selection-mode (arg)
   "Enable CUA selection mode without the C-z/C-x/C-c/C-v bindings."

@@ -5264,6 +5264,11 @@ This function is called from lisp/Makefile and leim/Makefile."
     (setq file (concat (substring file 1 2) ":" (substring file 2))))
   file)
 
+;;; John DeBord
+;;; Original modification:
+;;; Jun. 14th, 2020
+;;;
+;;; Needed to maintain consistency.
 (provide 'subr)
 
 ;;; subr.el ends here

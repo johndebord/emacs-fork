@@ -2212,13 +2212,20 @@ Global `ispell-quit' set to start location to continue spell session."
 		    ;; event), stop ispell.  As a special exception,
 		    ;; ignore mouse events occurring in the same frame.
 		    (while (and input-valid (not (characterp char)))
-                      ;;; John DeBord
-                      ;;; May. 3rd, 2020
-                      ;;; Translate `jd:spc` to `SPC`.
 		      (setq char (read-key))
-                      (if (and (symbolp char)
-                               (eq char 'jd:spc))
-                          (setq char ? ))
+
+                      ;;; John DeBord
+                      ;;; Original modification:
+                      ;;; Dec. 27th, 2019
+                      ;;;
+                      ;;; Updated:
+                      ;;; Jun. 14th, 2020
+                      ;;; Cleanup.
+                      ;;;
+                      ;;; Translate `jd:spc` to `SPC`.
+                      (if (and (symbolp char)     ;; jd
+                               (eq char 'jd:spc)) ;; jd
+                          (setq char ? ))         ;; jd
 		      (setq input-valid
 			    (or (characterp char)
 				(and (mouse-event-p char)
@@ -2236,10 +2243,16 @@ Global `ispell-quit' set to start location to continue spell session."
 		    (setq num (- char ?0 skipped)))
 
 		  (cond
-		   ;; ((= char ? ) nil)	; accept word this time only
+
                    ;;; John DeBord
+                   ;;; Original modification:
                    ;;; Mar. 22nd, 2020
-                   ;;; Always kill the window.
+                   ;;;
+                   ;;; Updated:
+                   ;;; Jun. 14th, 2020
+                   ;;; Cleanup.
+                   ;;;
+                   ;;; Modify main functionality of this function.
                    ((= (kbd "<jd:spc>")) nil)	; accept word this time only
 		   ((= char ?i)		        ; accept and insert word into pers dict
 		    (ispell-send-string (concat "*" word "\n"))

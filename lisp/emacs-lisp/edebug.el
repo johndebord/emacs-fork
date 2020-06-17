@@ -3459,28 +3459,22 @@ Return the result of the last expression."
 (defalias 'edebug-format #'format-message)
 (defalias 'edebug-message #'message)
 
-;; (defun edebug-eval-expression (expr)
-;;   "Evaluate an expression in the outside environment.
-;; If interactive, prompt for the expression.
-;; Print result in minibuffer."
-;;   (interactive (list (read-from-minibuffer
-;; 		      "Eval: " nil read-expression-map t
-;; 		      'read-expression-history)))
-;;   (princ
-;;    (edebug-outside-excursion
-;;     (setq values (cons (edebug-eval expr) values))
-;;     (concat (edebug-safe-prin1-to-string (car values))
-;;             (eval-expression-print-format (car values))))))
-
-;;; John DeBord
-;;; Apr. 28th, 2020
-;;; Rework of this function to behave just like `eval-expression`.
 (defun edebug-eval-expression (expr)
   "Evaluate an expression in the outside environment.
 If interactive, prompt for the expression.
 Print result in minibuffer."
-  (interactive
-   (list (read--expression "Eval: ")))
+
+  ;;; John DeBord
+  ;;; Original modification:
+  ;;; Dec. 27th, 2019
+  ;;;
+  ;;; Updated:
+  ;;; Jun. 14th, 2020
+  ;;; Cleanup.
+  ;;;
+  ;;; Rework of this function to behave just like `eval-expression`.
+  (interactive                         ;; jd
+   (list (read--expression "Eval: "))) ;; jd
   (princ
    (edebug-outside-excursion
     (setq values (cons (edebug-eval expr) values))

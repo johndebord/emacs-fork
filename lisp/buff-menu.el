@@ -702,6 +702,11 @@ means list those buffers and no others."
 	((bound-and-true-p list-buffers-directory))
 	(t "")))
 
+;;; John DeBord
+;;; Original modification:
+;;; Jun. 14th, 2020
+;;;
+;;; Needed to maintain consistency.
 (provide 'buff-menu)
 
 ;;; buff-menu.el ends here

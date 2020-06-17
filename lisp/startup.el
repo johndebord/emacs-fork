@@ -2178,40 +2178,17 @@ Type \\[describe-distribution] for information on "))
      "For information about GNU Emacs and the GNU system, type \
 \\[about-emacs].")))
 
-;; (defun display-startup-echo-area-message ()
-;;   (let ((resize-mini-windows t))
-;;     (or noninteractive                  ;(input-pending-p) init-file-had-error
-;; 	;; t if the init file says to inhibit the echo area startup message.
-;; 	(and inhibit-startup-echo-area-message
-;; 	     user-init-file
-;; 	     (or (and (get 'inhibit-startup-echo-area-message 'saved-value)
-;; 		      (equal inhibit-startup-echo-area-message
-;; 			     (if (equal init-file-user "")
-;; 				 (user-login-name)
-;; 			       init-file-user)))
-;; 		 ;; Wasn't set with custom; see if .emacs has a setq.
-;;                  (condition-case nil
-;;                      (with-temp-buffer
-;;                        (insert-file-contents user-init-file)
-;;                        (re-search-forward
-;;                         (concat
-;;                          "([ \t\n]*setq[ \t\n]+"
-;;                          "inhibit-startup-echo-area-message[ \t\n]+"
-;;                          (regexp-quote
-;;                           (prin1-to-string
-;;                            (if (equal init-file-user "")
-;;                                (user-login-name)
-;;                              init-file-user)))
-;;                          "[ \t\n]*)")
-;;                         nil t))
-;;                    (error nil))))
-;; 	(message "%s" (startup-echo-area-message)))))
-
 ;;; John DeBord
+;;; Original modification:
 ;;; Dec. 28th, 2019
+;;;
+;;; Updated:
+;;; Jun. 14th, 2020
+;;; Cleanup.
+;;;
 ;;; Null out the startup message upon startup.
 (defun display-startup-echo-area-message ()
-  (message ""))
+  (message "")) ;; jd
 
 (defun display-startup-screen (&optional concise)
   "Display startup screen according to display.
@@ -2606,6 +2583,11 @@ nil default-directory" name)
 	(setq file (replace-match "/" t t file))))
     file))
 
+;;; John DeBord
+;;; Original modification:
+;;; Jun. 14th, 2020
+;;;
+;;; Needed to maintain consistency.
 (provide 'startup)
 
 ;;; startup.el ends here

@@ -304,7 +304,13 @@ If a number, only buffers greater than this size have fontification messages."
   "Face name to use for comments.")
 
 ;;; John DeBord
+;;; Original modification:
 ;;; Jan. 8th, 2020
+;;;
+;;; Updated:
+;;; Jun. 14th, 2020
+;;; Cleanup.
+;;;
 ;;; Additional face declaration for accentuating symbols in comments.
 (defvar font-lock-comment-symbol-face	'font-lock-comment-symbol-face
   "Face name to use for symbols in comments.")
@@ -1965,7 +1971,13 @@ Sets various variables using `font-lock-defaults' and
   :group 'font-lock-faces)
 
 ;;; John DeBord
+;;; Original modification:
 ;;; Jan. 8th, 2020
+;;;
+;;; Updated:
+;;; Jun. 14th, 2020
+;;; Cleanup.
+;;;
 ;;; Additional face definition for accentuating symbols in comments.
 (defface font-lock-comment-symbol-face
   '((((class grayscale) (background light))

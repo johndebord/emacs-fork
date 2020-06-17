@@ -1256,33 +1256,21 @@ so that the documentation can show the right key bindings."
   :group 'help
   :version "24.3")
 
-;; (defun help-window-display-message (quit-part window &optional scroll)
-;;   "Display message telling how to quit and scroll help window.
-;; QUIT-PART is a string telling how to quit the help window WINDOW.
-;; Optional argument SCROLL non-nil means tell how to scroll WINDOW.
-;; SCROLL equal `other' means tell how to scroll the \"other\"
-;; window."
-;;   (let ((scroll-part
-;; 	 (cond
-;; 	  ;; If we don't have QUIT-PART we probably reuse a window
-;; 	  ;; showing the same buffer so we don't show any message.
-;; 	  ((not quit-part) nil)
-;; 	  ((pos-visible-in-window-p
-;; 	    (with-current-buffer (window-buffer window)
-;; 	      (point-max)) window t)
-;; 	   ;; Buffer end is at least partially visible, no need to talk
-;; 	   ;; about scrolling.
-;; 	   ".")
-;; 	  ((eq scroll 'other)
-;; 	   ", \\[scroll-other-window] to scroll help.")
-;; 	  (scroll ", \\[scroll-up] to scroll help."))))
-;;     (message "%s"
-;;      (substitute-command-keys (concat quit-part scroll-part)))))
-
 ;;; John DeBord
+;;; Original modification:
 ;;; Dec. 28th, 2019
+;;;
+;;; Updated:
+;;; Jun. 14th, 2020
+;;; Cleanup.
+;;;
 ;;; Null out redundant message.
-(defun help-window-display-message (&rest _))
+(defun help-window-display-message (&rest _) ;; jd
+    "Display message telling how to quit and scroll help window.
+QUIT-PART is a string telling how to quit the help window WINDOW.
+Optional argument SCROLL non-nil means tell how to scroll WINDOW.
+SCROLL equal `other' means tell how to scroll the \"other\"
+window.")
 
 (defun help-window-setup (window &optional value)
   "Set up help window WINDOW for `with-help-window'.

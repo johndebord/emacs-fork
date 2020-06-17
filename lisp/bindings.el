@@ -1339,6 +1339,11 @@ if `inhibit-field-text-motion' is non-nil."
 ;; no-update-autoloads: t
 ;; End:
 
-(provide 'bindings)
+;;; John DeBord
+;;; Original modification:
+;;; Jun. 14th, 2020
+;;;
+;;; Needed to maintain consistency.
+(provide 'bindings) ;; jd
 
 ;;; bindings.el ends here
