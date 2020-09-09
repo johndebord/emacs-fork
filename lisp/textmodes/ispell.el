@@ -2116,6 +2116,11 @@ If so, ask if it needs to be saved."
 It is called once per iteration, before displaying a prompt to
 the user.")
 
+;;; John DeBord
+;;; Original modification:
+;;; Sept. 7th, 2020
+;;;
+;;; Make `ispell-command-loop` work with `jd:spc`.
 (defun ispell-command-loop (miss guess word start end)
   "Display possible corrections from list MISS.
 GUESS lists possibly valid affix construction of WORD.
@@ -2147,7 +2152,7 @@ Global `ispell-quit' set to start location to continue spell session."
              "  --  prog: " (file-name-nondirectory ispell-program-name)))
       ;; No need for horizontal scrollbar in choices window
       (with-no-warnings
-       (setq horizontal-scroll-bar nil))
+        (setq horizontal-scroll-bar nil))
       (erase-buffer)
       (if guess
 	  (progn
@@ -2211,27 +2216,16 @@ Global `ispell-quit' set to start location to continue spell session."
 		    ;; non-character event (such as a frame switch
 		    ;; event), stop ispell.  As a special exception,
 		    ;; ignore mouse events occurring in the same frame.
-		    (while (and input-valid (not (characterp char)))
+		    (while (and input-valid (not (characterp char)) (not (eq char 'jd:spc))) ;; jd
 		      (setq char (read-key))
-
-                      ;;; John DeBord
-                      ;;; Original modification:
-                      ;;; Dec. 27th, 2019
-                      ;;;
-                      ;;; Updated:
-                      ;;; Jun. 14th, 2020
-                      ;;; Cleanup.
-                      ;;;
-                      ;;; Translate `jd:spc` to `SPC`.
-                      (if (and (symbolp char)     ;; jd
-                               (eq char 'jd:spc)) ;; jd
-                          (setq char ? ))         ;; jd
 		      (setq input-valid
-			    (or (characterp char)
+			    (or (eq char 'jd:spc) ;; jd
+                                (characterp char)
 				(and (mouse-event-p char)
 				     (eq (selected-frame)
 					 (window-frame
 					  (posn-window (event-start char))))))))
+                    (if (eq char 'jd:spc) (setq char 32)) ;; jd
 		    (when (or quit-flag (not input-valid) (= char ?\C-g))
 		      (setq char ?X quit-flag nil)))
 		  ;; Adjust num to array offset skipping command characters.
@@ -2242,19 +2236,10 @@ Global `ispell-quit' set to start location to continue spell session."
 		      (setq com-chars (cdr com-chars)))
 		    (setq num (- char ?0 skipped)))
 
+                  (message "9999999999999999999999")
 		  (cond
-
-                   ;;; John DeBord
-                   ;;; Original modification:
-                   ;;; Mar. 22nd, 2020
-                   ;;;
-                   ;;; Updated:
-                   ;;; Jun. 14th, 2020
-                   ;;; Cleanup.
-                   ;;;
-                   ;;; Modify main functionality of this function.
-                   ((= (kbd "<jd:spc>")) nil)	; accept word this time only
-		   ((= char ?i)		        ; accept and insert word into pers dict
+		   ((= char ? ) nil)	; accept word this time only
+		   ((= char ?i)		; accept and insert word into pers dict
 		    (ispell-send-string (concat "*" word "\n"))
 		    (setq ispell-pdict-modified-p '(t)) ; dictionary modified!
 
@@ -2306,10 +2291,10 @@ Global `ispell-quit' set to start location to continue spell session."
 		   ((= char ?X)
 		    (ispell-pdict-save ispell-silently-savep)
 		    (message "%s"
-		     (substitute-command-keys
-		      (concat
-                       "Spell-checking suspended; use "
-		       "\\[universal-argument] \\[ispell-word] to resume")))
+                             (substitute-command-keys
+                              (concat
+                               "Spell-checking suspended; use "
+                               "\\[universal-argument] \\[ispell-word] to resume")))
 		    (setq ispell-quit start)
 		    nil)
 		   ((= char ?q)
@@ -2416,7 +2401,6 @@ Global `ispell-quit' set to start location to continue spell session."
 	   (save-window-excursion
 	     (select-window textwin)
 	     (ispell-highlight-spelling-error start end))))))
-
 
 
 (defun ispell-show-choices ()

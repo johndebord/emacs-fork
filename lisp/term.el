@@ -3787,11 +3787,18 @@ all pending output has been dealt with."))
     (when start-column
       (term-move-columns start-column))))
 
+;;; John DeBord
+;;; Original modification:
+;;; Sept. 8th, 2020
+;;;
+;;; This screws up `term-mode` for me.
 ;; Assuming point is at the beginning of a screen line,
 ;; if the line above point wraps around, add a ?\n to undo the wrapping.
 ;; FIXME:  Probably should be called more than it is.
 (defun term-unwrap-line ()
-  (when (not (bolp)) (insert-before-markers ?\n)))
+  (when (not (bolp))
+    ;; (insert-before-markers ?\n) ;; jd
+    ))
 
 (defun term-erase-in-line (kind)
   (when (= kind 1) ;; erase left of point
@@ -3816,7 +3823,12 @@ all pending output has been dealt with."))
       ;; extra space when wrapped is false.
       (when wrapped
 	(insert ? ))
-      (insert ?\n)
+      ;;; John DeBord
+      ;;; Original modification:
+      ;;; Sept. 6th, 2020
+      ;;;
+      ;;; This screws up `term-mode` for me.
+      ;; (insert ?\n) ;; jd
       (put-text-property saved-point (point) 'font-lock-face 'default)
       (goto-char saved-point))))
 
